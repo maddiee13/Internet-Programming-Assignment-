@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz App</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <style>
+        body {
+            /* Use a gradient background for the body */
+            background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+            color: #f8f9fa;
+        }
+        .btn {
+            margin-top: 10px;
+            /* Use a gradient background for the buttons */
+            background: linear-gradient(to right, #ff5f6d, #ffc371);
+            border: none;
+            /* Add some box shadow for the buttons */
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+        }
+        .list-group-item {
+            /* Use a solid border for the list items */
+            border: 1px solid #f8f9fa;
+        }
+        .container {
+            /* Add some padding and margin for the container */
+            padding: 20px;
+            margin: 20px auto;
+            /* Add some border radius for the container */
+            border-radius: 10px;
+            /* Add some box shadow for the container */
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Quiz about MYTHOLOGY</h1>
+        <div class="quiz-container" id="quiz"></div>
+        <div class="result-container" id="result"></div>
+        <button class="btn btn-primary btn-sm" id="start">Start</button>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    <script>
+        let quizData = [];
+        let quizCounter = 0;
+        let correctAnswers = 0;
+        let quizContainer = document.getElementById('quiz');
+        let resultContainer = document.getElementById('result');
+
+        const startButton = document.getElementById('start');
+        startButton.addEventListener('click', startQuiz);
+
+        function startQuiz() {
+            startButton.style.display = 'none';
+            getQuizData();
+        }
+
+        function getQuizData() {
+            fetch('https://opentdb.com/api.php?amount=10&category=20&difficulty=medium&type=multiple&encode=url3986')
+                .then(response => response.json())
+                .then(data => {
+                    quizData = data.results;
+                    // decode the questions and answers
+                    for (let i = 0; i < quizData.length; i++) {
+                      quizData[i].question = decodeURIComponent(quizData[i].question);
+                      quizData[i].correct_answer = decodeURIComponent(quizData[i].correct_answer);
+                      for (let j = 0; j < quizData[i].incorrect_answers.length; j++) {
+                        quizData[i].incorrect_answers[j] = decodeURIComponent(quizData[i].incorrect_answers[j]);
+                      }
+                    }
+                    showQuiz();
+                });
+        }
+
+        function showQuiz() {
+            quizContainer.innerHTML = '';
+            if (quizCounter >= quizData.length) {
+                showResult();
+                return;
+            }
+            let currentQuiz = quizData[quizCounter];
+            let quizMarkup = `
+                <h3>${currentQuiz.question}</h3>
+                <ul class="list-group">
+                    <li class="list-group-item"><button onclick="checkAnswer(true)">${currentQuiz.correct_answer}</button></li>
+                    <li class="list-group-item"><button onclick="checkAnswer(false)">${currentQuiz.incorrect_answers[0]}</button></li>
+                    <li class="list-group-item"><button onclick="checkAnswer(false)">${currentQuiz.incorrect_answers[1]}</button></li>
+                    <li class="list-group-item"><button onclick="checkAnswer(false)">${currentQuiz.incorrect_answers[2]}</button></li>
+                </ul>
+            `;
+            quizContainer.innerHTML = quizMarkup;
+        }
+
+        function checkAnswer(isCorrect) {
+            if (isCorrect) {
+                correctAnswers++;
+            }
+            quizCounter++;
+            showQuiz();
+        }
+
+        function showResult() {
+            resultContainer.innerHTML = `
+                <h3>Result: ${correctAnswers} / ${quizData.length}</h3>
+                <button class="btn btn-primary" onclick="location.reload()">Restart</button>
+            `;
+        }
+    </script>
+</body>
+</html>
